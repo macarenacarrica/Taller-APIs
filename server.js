@@ -2,11 +2,15 @@ const express = require('express');
 const mysql = require('mysql2');
 const bcrypt = require('bcrypt');
 const session = require('express-session');
+const path = require('path'); // Importa el módulo path
 
 const app = express();
-const PORT = 3000; // Cambiado a 3000 para evitar conflictos con el puerto de MySQL
+const PORT = 3000; // Puerto en el que estará el servidor
 
-// Middleware
+// Middleware para servir archivos estáticos (HTML, CSS, JS)
+app.use(express.static(path.join(__dirname, 'public')));
+
+// Otros middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(session({
@@ -41,7 +45,7 @@ app.get('/test-db', (req, res) => {
     });
 });
 
-// Ruta para registrar un nuevo usuario
+// Ruta de registro
 app.post('/register', async (req, res) => {
     const { username, password } = req.body;
 
@@ -59,14 +63,11 @@ app.post('/register', async (req, res) => {
         (err) => {
             if (err) {
                 if (err.code === 'ER_DUP_ENTRY') {
-                    res.status(400).send('El usuario ya existe');
-                } else {
-                    console.error(err);
-                    res.status(500).send('Error en el servidor');
+                    return res.status(400).send('El usuario ya existe');
                 }
-            } else {
-                res.send('Usuario registrado exitosamente');
+                return res.status(500).send('Error en el servidor');
             }
+            res.send('Usuario registrado exitosamente');
         }
     );
 });
